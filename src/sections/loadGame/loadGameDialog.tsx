@@ -25,6 +25,7 @@ import { useLocalStorage } from "@/hooks/useLocalStorage";
 import LichessInput from "./lichessInput";
 import { useSetAtom } from "jotai";
 import { boardOrientationAtom } from "../analysis/states";
+import GameFenInput from "./gameFenInput";
 
 interface Props {
   open: boolean;
@@ -34,6 +35,7 @@ interface Props {
 
 export default function NewGameDialog({ open, onClose, setGame }: Props) {
   const [pgn, setPgn] = useState("");
+  const [fen, setFen] = useState("");
   const [gameOrigin, setGameOrigin] = useLocalStorage(
     "preferred-game-origin",
     GameOrigin.ChessCom
@@ -139,6 +141,10 @@ export default function NewGameDialog({ open, onClose, setGame }: Props) {
             <GamePgnInput pgn={pgn} setPgn={setPgn} />
           )}
 
+          {gameOrigin === GameOrigin.Fen && (
+            <GameFenInput fen={fen} setFen={setFen} />
+          )}
+
           {gameOrigin === GameOrigin.ChessCom && (
             <ChessComInput onSelect={handleAddGame} />
           )}
@@ -163,12 +169,16 @@ export default function NewGameDialog({ open, onClose, setGame }: Props) {
         <Button variant="outlined" onClick={handleClose}>
           Cancel
         </Button>
-        {gameOrigin === GameOrigin.Pgn && (
+        {(gameOrigin === GameOrigin.Pgn || gameOrigin === GameOrigin.Fen) && (
           <Button
             variant="contained"
             sx={{ marginLeft: 2 }}
             onClick={() => {
-              handleAddGame(pgn);
+              if (gameOrigin === GameOrigin.Pgn) {
+                handleAddGame(pgn);
+              } else {
+                setParsingError("FEN import is not yet supported.");
+              }
             }}
           >
             Add
@@ -183,4 +193,5 @@ const gameOriginLabel: Record<GameOrigin, string> = {
   [GameOrigin.ChessCom]: "Chess.com",
   [GameOrigin.Lichess]: "Lichess.org",
   [GameOrigin.Pgn]: "PGN",
+  [GameOrigin.Fen]: "FEN",
 };
